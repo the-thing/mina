@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLParameters;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.filterchain.IoFilterAdapter;
@@ -79,7 +80,10 @@ public class SslFilter extends IoFilterAdapter {
 
     /** A flag set if client authentication is requested */ 
     protected boolean wantClientAuth = false;
-    
+
+    /** The endpoint identification algorithm used by clients to validate server host name */
+    private String identificationAlgorithm;
+
     /** The enabled Ciphers. */
     protected String[] enabledCipherSuites;
     
@@ -145,6 +149,24 @@ public class SslFilter extends IoFilterAdapter {
      */
     public void setWantClientAuth(boolean wantClientAuth) {
         this.wantClientAuth = wantClientAuth;
+    }
+
+    /**
+     * @return the endpoint identification algorithm to be used when {@link SSLEngine}
+     * is initialized. <tt>null</tt> means 'use {@link SSLEngine}'s default.'
+     */
+    public String getEndpointIdentificationAlgorithm() {
+        return identificationAlgorithm;
+    }
+
+    /**
+     * Sets the endpoint identification algorithm to be used when {@link SSLEngine}
+     * is initialized.
+     *
+     * @param identificationAlgorithm <tt>null</tt> means 'use {@link SSLEngine}'s default.'
+     */
+    public void setEndpointIdentificationAlgorithm(String identificationAlgorithm) {
+        this.identificationAlgorithm = identificationAlgorithm;
     }
 
     /**
@@ -279,7 +301,18 @@ public class SslFilter extends IoFilterAdapter {
      * @return an SSLEngine
      */
     protected SSLEngine createEngine(IoSession session, InetSocketAddress addr) {
-        SSLEngine sslEngine = (addr != null) ? sslContext.createSSLEngine(addr.getHostString(), addr.getPort())
+        InetSocketAddress peerAddress = (InetSocketAddress) session.getAttribute("peerAddress");
+
+        // TODO remove
+        System.out.println("isServer: " + session.isServer() + ", address: " + addr.getHostName() + " / " + addr.getAddress() + " / " + addr.getHostString());
+
+        if (peerAddress != null) {
+            // TODO remove
+            System.out.println("isServer: " + session.isServer() + ", address: " + peerAddress.getHostName() + " / " + peerAddress.getAddress() + " / " + peerAddress.getHostString());
+            addr = peerAddress;
+        }
+
+        SSLEngine sslEngine = (addr != null) ? sslContext.createSSLEngine(addr.getHostName(), addr.getPort())
                 : sslContext.createSSLEngine();
         
         // Always start with WANT, which will be squashed by NEED if NEED is true.
@@ -298,6 +331,12 @@ public class SslFilter extends IoFilterAdapter {
         
         if (enabledProtocols != null) {
             sslEngine.setEnabledProtocols(enabledProtocols);
+        }
+
+        if (identificationAlgorithm != null) {
+            SSLParameters sslParameters = sslEngine.getSSLParameters();
+            sslParameters.setEndpointIdentificationAlgorithm(identificationAlgorithm);
+            sslEngine.setSSLParameters(sslParameters);
         }
         
         sslEngine.setUseClientMode(!session.isServer());
