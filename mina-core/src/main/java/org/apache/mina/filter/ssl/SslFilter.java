@@ -20,15 +20,20 @@
 package org.apache.mina.filter.ssl;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SNIHostName;
+import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLParameters;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.filterchain.IoFilterAdapter;
@@ -79,7 +84,12 @@ public class SslFilter extends IoFilterAdapter {
 
     /** A flag set if client authentication is requested */ 
     protected boolean wantClientAuth = false;
-    
+
+    /** The endpoint identification algorithm used by clients to validate server host name */
+    private String identificationAlgorithm;
+
+    private String[] serverNames;
+
     /** The enabled Ciphers. */
     protected String[] enabledCipherSuites;
     
@@ -145,6 +155,41 @@ public class SslFilter extends IoFilterAdapter {
      */
     public void setWantClientAuth(boolean wantClientAuth) {
         this.wantClientAuth = wantClientAuth;
+    }
+
+    /**
+     * @return the endpoint identification algorithm to be used when {@link SSLEngine}
+     * is initialized. <tt>null</tt> means 'use {@link SSLEngine}'s default.'
+     */
+    public String getEndpointIdentificationAlgorithm() {
+        return identificationAlgorithm;
+    }
+
+    /**
+     * Sets the endpoint identification algorithm to be used when {@link SSLEngine}
+     * is initialized.
+     *
+     * @param identificationAlgorithm <tt>null</tt> means 'use {@link SSLEngine}'s default.'
+     */
+    public void setEndpointIdentificationAlgorithm(String identificationAlgorithm) {
+        this.identificationAlgorithm = identificationAlgorithm;
+    }
+
+    /**
+     * @return the Server Name Indication (SNI) server names to be used when {@link SSLEngine}
+     * is initialized. <tt>null</tt> means 'use {@link SSLEngine}'s default.'
+     */
+    public String[] getServerNames() {
+        return serverNames;
+    }
+
+    /**
+     * Sets the list of Server Name Indication (SNI) server names
+     *
+     * @param serverNames The list of Server Name Indication (SNI) server names
+     */
+    public void setServerNames(String... serverNames) {
+        this.serverNames = serverNames;
     }
 
     /**
@@ -299,6 +344,24 @@ public class SslFilter extends IoFilterAdapter {
         if (enabledProtocols != null) {
             sslEngine.setEnabledProtocols(enabledProtocols);
         }
+
+        SSLParameters sslParameters = sslEngine.getSSLParameters();
+
+        if (identificationAlgorithm != null) {
+            sslParameters.setEndpointIdentificationAlgorithm(identificationAlgorithm);
+        }
+
+        if (serverNames != null) {
+            List<SNIServerName> sniServerNames = new ArrayList<>();
+
+            for (int i = 0; i < serverNames.length; i++) {
+                sniServerNames.add(new SNIHostName(serverNames[i]));
+            }
+
+            sslParameters.setServerNames(sniServerNames);
+        }
+
+        sslEngine.setSSLParameters(sslParameters);
         
         sslEngine.setUseClientMode(!session.isServer());
         
