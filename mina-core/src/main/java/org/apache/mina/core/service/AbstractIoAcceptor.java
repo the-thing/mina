@@ -407,6 +407,7 @@ public final void bind(Iterable<? extends SocketAddress> localAddresses) throws 
 
                 if (!localAddressesCopy.isEmpty()) {
                     try {
+                        LOGGER.error("ml_test, unbind: {}", localAddressesCopy);
                         unbind0(localAddressesCopy);
                     } catch (RuntimeException e) {
                         throw e;
