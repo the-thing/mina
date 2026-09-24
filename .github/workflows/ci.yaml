@@ -3,10 +3,10 @@ name: Java CI
 
 on:
   # Build only the production branches on push, so internal feature branches do not trigger a build twice (once on push, once on the pull request).
-  workflow_dispatch:
   push:
     # Restricts push builds to these branches, even if the workflow is copied to another branch.
     branches:
+      - bind-test
       - 2.0.X
       - 2.1.X
       - 2.2.X
