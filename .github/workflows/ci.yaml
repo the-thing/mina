@@ -53,6 +53,7 @@ jobs:
           mvn verify \
           -Pserial \
           -Dtest=DatagramBindTest \
+          -Dsurefire.failIfNoSpecifiedTests=false \
           --show-version --batch-mode --errors --no-transfer-progress
 
       # Upload the test results, even when the build failed.
