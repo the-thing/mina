@@ -2,8 +2,10 @@
 name: Java CI
 
 on:
+  workflow_dispatch:
   push:
   pull_request:
+    types: [reopened, opened, synchronize]
 
 # Permissions are granted per job.
 permissions: { }
