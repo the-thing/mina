@@ -218,7 +218,9 @@ public abstract class AbstractIoAcceptor extends AbstractIoService implements Io
      */
     @Override
     public final void bind() throws IOException {
-        bind(getDefaultLocalAddresses());
+        List<SocketAddress> defaultLocalAddresses = getDefaultLocalAddresses();
+        LOGGER.error("ml_test, bind: {}", defaultLocalAddresses);
+        bind(defaultLocalAddresses);
     }
 
     /**

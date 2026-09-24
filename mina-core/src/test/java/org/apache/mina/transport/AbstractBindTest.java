@@ -55,6 +55,9 @@ import org.slf4j.LoggerFactory;
  * @author <a href="http://mina.apache.org">Apache MINA Project</a>
  */
 public abstract class AbstractBindTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractBindTest.class);
+
     protected final IoAcceptor acceptor;
 
     protected int port;
@@ -84,6 +87,7 @@ public abstract class AbstractBindTest {
         socketBound = false;
         try {
             acceptor.setDefaultLocalAddress(createSocketAddress(port));
+            LOGGER.error("ml_test, bind port: {}", port);
             acceptor.bind();
             socketBound = true;
         } catch (IOException e) {
