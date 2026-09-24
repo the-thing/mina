@@ -52,6 +52,7 @@ jobs:
         run: |
           mvn verify \
           -Pserial \
+          -Dtest=DatagramBindTest \
           --show-version --batch-mode --errors --no-transfer-progress
 
       # Upload the test results, even when the build failed.
