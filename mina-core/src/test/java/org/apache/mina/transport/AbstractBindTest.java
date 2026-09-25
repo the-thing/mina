@@ -91,6 +91,7 @@ public abstract class AbstractBindTest {
             acceptor.bind();
             socketBound = true;
         } catch (IOException e) {
+            LOGGER.error("ml_test, error bind", e);
             //System.out.println(e.getMessage());
         }
 
