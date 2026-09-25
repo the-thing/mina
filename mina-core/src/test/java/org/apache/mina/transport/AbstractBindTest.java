@@ -41,11 +41,14 @@ import org.apache.mina.transport.socket.DatagramAcceptor;
 import org.apache.mina.transport.socket.DatagramSessionConfig;
 import org.apache.mina.transport.socket.SocketAcceptor;
 import org.apache.mina.transport.socket.SocketSessionConfig;
+import org.apache.mina.transport.socket.nio.PrintTestNameRule;
 import org.apache.mina.util.AvailablePortFinder;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +64,9 @@ public abstract class AbstractBindTest {
     protected final IoAcceptor acceptor;
 
     protected int port;
+
+    @Rule
+    public PrintTestNameRule printTestNameRule = new PrintTestNameRule();
 
     public AbstractBindTest(IoAcceptor acceptor) {
         this.acceptor = acceptor;
