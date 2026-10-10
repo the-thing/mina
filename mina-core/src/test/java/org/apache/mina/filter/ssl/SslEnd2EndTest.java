@@ -31,31 +31,27 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.apache.mina.util.AcceptorBindUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.Security;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-@RunWith(Parameterized.class)
 public class SslEnd2EndTest {
 
     private static final String KEY_MANAGER_FACTORY_ALGORITHM;
@@ -70,42 +66,31 @@ public class SslEnd2EndTest {
         KEY_MANAGER_FACTORY_ALGORITHM = algorithm;
     }
 
-    @Parameterized.Parameters(name = "{index}: {0} / {1} / {2} / {3}")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][]{
-                {"TLSv1.2", "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", 4096, 4},
-                {"TLSv1.3", "TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384", 4096, 4},
-        });
+    private static Stream<Arguments> parameters() {
+        return Stream.of(
+                Arguments.of("TLSv1.2", new String[] {"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256","TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384","TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256","TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"}, 4096, 4),
+                Arguments.of("TLSv1.3", new String[] {"TLS_AES_128_GCM_SHA256","TLS_AES_256_GCM_SHA384"}, 4096, 4)
+        );
     }
 
-    private final String protocol;
-    private final String[] cipherSuites;
-    private final int messageCount;
-    private final int messageLengthDelta;
-
-    public SslEnd2EndTest(String protocol, String cipherSuites, int messageCount, int messageLengthDelta) {
-        this.protocol = protocol;
-        this.cipherSuites = cipherSuites.split(",");
-        this.messageCount = messageCount;
-        this.messageLengthDelta = messageLengthDelta;
-    }
-
-    @Test
-    public void shouldSendLargeMessages() throws Exception {
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void shouldSendLargeMessages(String protocol, String[] cipherSuites, int messageCount,
+            int messageLengthDelta) throws Exception {
         ByteBuffer acceptorReceiveBuffer = ByteBuffer.allocate(MAX_LENGTH);
         AcceptorHandler acceptorHandler = new AcceptorHandler(acceptorReceiveBuffer);
-        IoAcceptor acceptor = createAcceptor(acceptorHandler);
+        IoAcceptor acceptor = createAcceptor(acceptorHandler, cipherSuites, protocol);
 
         try {
             AcceptorBindUtil.tryBind(acceptor);
 
             ByteBuffer connectorReceiveBuffer = ByteBuffer.allocate(MAX_LENGTH);
             ConnectorIoHandler connectorHandler = new ConnectorIoHandler(connectorReceiveBuffer);
-            IoConnector connector = createConnector(connectorHandler);
+            IoConnector connector = createConnector(connectorHandler, cipherSuites, protocol);
 
             try {
                 ConnectFuture connectFuture = connector.connect(acceptor.getLocalAddress());
-                assertTrue("Failed to connect", connectFuture.awaitUninterruptibly(4L, TimeUnit.SECONDS));
+                assertTrue(connectFuture.awaitUninterruptibly(4L, TimeUnit.SECONDS), "Failed to connect");
 
                 IoBuffer connectorSendBuffer = IoBuffer.wrap(ByteBuffer.allocate(MAX_LENGTH));
 
@@ -133,7 +118,7 @@ public class SslEnd2EndTest {
                     connectorHandler.reset(connectorMessageReceivedLatch, messageLength);
 
                     WriteFuture writeFuture = session.write(connectorSendBuffer);
-                    assertTrue("Connector write failed", writeFuture.awaitUninterruptibly(4L, TimeUnit.SECONDS));
+                    assertTrue(writeFuture.awaitUninterruptibly(4L, TimeUnit.SECONDS), "Connector write failed");
 
                     boolean messageReceived = acceptorMessageReceivedLatch.await(4L, TimeUnit.SECONDS);
 
@@ -178,14 +163,14 @@ public class SslEnd2EndTest {
         }
     }
 
-    private IoAcceptor createAcceptor(IoHandler handler) throws Exception {
+    private IoAcceptor createAcceptor(IoHandler handler, String[] cipherSuites, String protocol) throws Exception {
         NioSocketAcceptor acceptor = new NioSocketAcceptor();
         acceptor.setReuseAddress(true);
         acceptor.setHandler(handler);
 
         DefaultIoFilterChainBuilder filters = acceptor.getFilterChain();
 
-        SSLContext sslContext = createAcceptorSSLContext();
+        SSLContext sslContext = createAcceptorSSLContext(protocol);
 
         SslFilter sslFilter = new SslFilter(sslContext);
         sslFilter.setUseNonBlockingPipeline(true);
@@ -197,13 +182,13 @@ public class SslEnd2EndTest {
         return acceptor;
     }
 
-    private IoConnector createConnector(IoHandler ioHandler) throws GeneralSecurityException, IOException {
+    private IoConnector createConnector(IoHandler ioHandler, String[] cipherSuites, String protocol) throws Exception {
         NioSocketConnector connector = new NioSocketConnector();
         connector.setHandler(ioHandler);
 
         DefaultIoFilterChainBuilder filters = connector.getFilterChain();
 
-        SSLContext sslContext = createConnectorSslContext();
+        SSLContext sslContext = createConnectorSslContext(protocol);
 
         SslFilter sslFilter = new SslFilter(sslContext);
         sslFilter.setUseNonBlockingPipeline(true);
@@ -215,7 +200,7 @@ public class SslEnd2EndTest {
         return connector;
     }
 
-    private SSLContext createAcceptorSSLContext() throws IOException, GeneralSecurityException {
+    private SSLContext createAcceptorSSLContext(String protocol) throws Exception {
         char[] passphrase = "password".toCharArray();
 
         SSLContext ctx = SSLContext.getInstance(protocol);
@@ -236,7 +221,7 @@ public class SslEnd2EndTest {
         return ctx;
     }
 
-    private SSLContext createConnectorSslContext() throws IOException, GeneralSecurityException {
+    private SSLContext createConnectorSslContext(String protocol) throws Exception {
         char[] passphrase = "password".toCharArray();
 
         SSLContext ctx = SSLContext.getInstance(protocol);

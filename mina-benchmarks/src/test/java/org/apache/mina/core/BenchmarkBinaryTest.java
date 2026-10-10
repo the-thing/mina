@@ -20,76 +20,52 @@
 package org.apache.mina.core;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.apache.mina.core.BenchmarkFactory.Type;
 import org.apache.mina.util.AvailablePortFinder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author <a href="http://mina.apache.org">Apache MINA Project</a>
  */
-@RunWith(Parameterized.class)
 public abstract class BenchmarkBinaryTest {
-    private int numberOfMessages;
-
     private int port;
 
     private BenchmarkServer server;
 
     private BenchmarkClient client;
 
-    private int messageSize;
-
-    private int timeout;
-
-    private byte[] data;
-
-    public BenchmarkBinaryTest(int numberOfMessages, int messageSize, int timeout) {
-        this.numberOfMessages = numberOfMessages;
-        this.messageSize = messageSize;
-        this.timeout = timeout;
-    }
-
     public abstract Type getClientType();
 
     public abstract Type getServerType();
 
-    @Parameters
-    public static Collection<Object[]> getParameters() {
-        Object[][] parameters = new Object[][] { 
-                { 100000, 10, 2 * 60 }, 
-                { 100000, 1 * 1024, 2 * 60 }, 
-                { 100000, 10 * 1024, 2 * 60 },
-                { 100, 64 * 1024 * 1024, 10 * 60 }
-        };
-        return Arrays.asList(parameters);
+    private static Stream<Arguments> parameters() {
+        return Stream.of(
+                Arguments.of(100000, 10, 2 * 60),
+                Arguments.of(100000, 1 * 1024, 2 * 60),
+                Arguments.of(100000, 10 * 1024, 2 * 60),
+                Arguments.of(100, 64 * 1024 * 1024, 10 * 60)
+        );
     }
 
-    @Before
+    @BeforeEach
     public void init() throws IOException {
         port = AvailablePortFinder.getNextAvailable();
         server = BenchmarkServerFactory.INSTANCE.get(getServerType());
         server.start(port);
         client = BenchmarkClientFactory.INSTANCE.get(getClientType());
-        data = new byte[messageSize + 4];
-        data[0] = (byte) (messageSize >>> 24 & 255);
-        data[1] = (byte) (messageSize >>> 16 & 255);
-        data[2] = (byte) (messageSize >>> 8 & 255);
-        data[3] = (byte) (messageSize & 255);
     }
 
-    @After
+    @AfterEach
     public void shutdown() throws IOException {
         client.stop();
         server.stop();
@@ -99,12 +75,19 @@ public abstract class BenchmarkBinaryTest {
      * Send "numberOfMessages" messages to a server. Currently, 1 million, with two different
      * size, 10Ko and 64Ko.
      */
-    @Test
-    public void benchmark() throws IOException, InterruptedException {
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void benchmark(int numberOfMessages, int messageSize, int timeout) throws IOException, InterruptedException {
+        byte[] data = new byte[messageSize + 4];
+        data[0] = (byte) (messageSize >>> 24 & 255);
+        data[1] = (byte) (messageSize >>> 16 & 255);
+        data[2] = (byte) (messageSize >>> 8 & 255);
+        data[3] = (byte) (messageSize & 255);
+
         CountDownLatch counter = new CountDownLatch(numberOfMessages);
 
         client.start(port, counter, data);
         boolean result = counter.await(timeout, TimeUnit.SECONDS);
-        assertTrue("Still " + counter.getCount() + " messages to send on a total of " + numberOfMessages, result);
+        assertTrue(result, "Still " + counter.getCount() + " messages to send on a total of " + numberOfMessages);
     }
 }

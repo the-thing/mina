@@ -27,14 +27,6 @@ import org.apache.mina.core.BenchmarkFactory.Type;
 public class MinaClientVsMinaServerBenchmarkBinaryTest extends BenchmarkBinaryTest {
 
     /**
-     * @param numberOfMessages
-     * @param messageSize
-     */
-    public MinaClientVsMinaServerBenchmarkBinaryTest(int numberOfMessages, int messageSize, int timeout) {
-        super(numberOfMessages, messageSize, timeout);
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override

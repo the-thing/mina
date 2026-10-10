@@ -19,25 +19,13 @@
  */
 package org.apache.mina.core;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.apache.mina.core.BenchmarkFactory.Type;
-import org.junit.runners.Parameterized.Parameters;
 
 /**
  * @author <a href="http://mina.apache.org">Apache MINA Project</a>
  */
 public class NettyClientVsNettyServerBenchmarkBinaryTest
     extends BenchmarkBinaryTest {
-
-    /**
-     * @param numberOfMessages
-     * @param messageSize
-     */
-    public NettyClientVsNettyServerBenchmarkBinaryTest( int numberOfMessages, int messageSize, int timeout ) {
-        super( numberOfMessages, messageSize, timeout );
-    }
 
     /** {@inheritDoc}
      */
@@ -51,17 +39,5 @@ public class NettyClientVsNettyServerBenchmarkBinaryTest
     @Override
     public Type getServerType() {
         return Type.Netty;
-    }
-    
-    //TODO: analyze with Netty is so slow on large message: last test lower to 100 messages
-    @Parameters
-    public static Collection<Object[]> getParameters() {
-        Object[][] parameters = new Object[][] { 
-                { 1000000, 10, 2 * 60 }, 
-                { 1000000, 1 * 1024, 2 * 60 }, 
-                { 1000000, 10 * 1024, 2 * 60 },
-                { 100, 64 * 1024 * 1024, 10 * 60 }
-        };
-        return Arrays.asList(parameters);
     }
 }

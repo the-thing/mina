@@ -18,9 +18,8 @@
  */
 package org.apache.mina.example.haiku;
 
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author <a href="http://mina.apache.org">Apache MINA Project</a>
@@ -63,8 +62,8 @@ public class HaikuValidatorTest {
 
     private HaikuValidator validator;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    public void setUp() {
         validator = new HaikuValidator();
     }
 

@@ -19,9 +19,6 @@
  */
 package org.apache.mina.statemachine;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.LinkedList;
 
 import org.apache.mina.statemachine.annotation.Transition;
@@ -32,7 +29,10 @@ import org.apache.mina.statemachine.context.StateContext;
 import org.apache.mina.statemachine.event.Event;
 import org.apache.mina.statemachine.transition.MethodSelfTransition;
 import org.apache.mina.statemachine.transition.MethodTransition;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests {@link StateMachineProxyBuilder}.

@@ -19,12 +19,12 @@
  */
 package org.apache.mina.statemachine.context;
 
-import static org.junit.Assert.assertSame;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Tests {@link AbstractStateContextLookup}.

@@ -19,9 +19,6 @@
  */
 package org.apache.mina.example.echoserver.ssl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
@@ -44,9 +41,12 @@ import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.filter.ssl.SslFilter;
 import org.apache.mina.transport.socket.SocketAcceptor;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * TODO Add documentation
@@ -58,13 +58,13 @@ public class SslFilterTest {
     private int port;
     private SocketAcceptor acceptor;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    public void setUp() {
         acceptor = new NioSocketAcceptor();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    public void tearDown() {
         acceptor.setCloseOnDeactivation(true);
         acceptor.dispose();
     }
@@ -135,8 +135,8 @@ public class SslFilterTest {
             Thread.sleep(100);
         }
 
-        assertEquals("handler should have sent 1 messages:", 1, handler.sentMessages.size());
-        assertEquals("All scheduled write messages should be cleared", 0, acceptor.getScheduledWriteMessages());
+        assertEquals(1, handler.sentMessages.size(), "handler should have sent 1 messages:");
+        assertEquals(0, acceptor.getScheduledWriteMessages(), "All scheduled write messages should be cleared");
         assertTrue(handler.sentMessages.contains("test-1"));
     }
 
