@@ -19,9 +19,6 @@
  */
 package org.apache.mina.filter.logging;
 
-import junit.framework.JUnit4TestAdapter;
-import junit.framework.Test;
-import junit.textui.TestRunner;
 
 import java.util.Date;
 
@@ -41,6 +38,8 @@ public class LoadTestMdcInjectionFilter {
      */
     public static void main(String[] args) {
         TestRunner runner = new TestRunner();
+
+        Junit5TestRunner junit5Runner = new Junit5TestRunner();
 
         try {
             for (int i = 0; i < 50000; i++) {

@@ -25,8 +25,8 @@ import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.core.write.WriteRequest;
 import org.apache.mina.filter.FilterEvent;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -34,8 +34,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests that verify the functionality provided by the implementation of
@@ -65,7 +65,7 @@ public class PriorityThreadPoolExecutorTest {
         int result = first.compareTo(last);
     
         // Verify results.
-        assertEquals("Without a comparator, entries of the same session are expected to be equal.", 0, result);
+        assertEquals(0, result, "Without a comparator, entries of the same session are expected to be equal.");
     }
 
     /**
@@ -89,7 +89,7 @@ public class PriorityThreadPoolExecutorTest {
         int result = first.compareTo(last);
         
         // Verify results.
-        assertTrue("Without a comparator, the first entry created should be the first entry out. Expected a negative result, instead, got: " + result, result < 0);
+        assertTrue(result < 0, "Without a comparator, the first entry created should be the first entry out. Expected a negative result, instead, got: " + result);
     }
 
     /**
@@ -123,7 +123,7 @@ public class PriorityThreadPoolExecutorTest {
         int result = first.compareTo(last);
         
         // Verify results.
-        assertEquals("With a comparator, entries of the same session are expected to be equal.", 0, result);
+        assertEquals(0, result, "With a comparator, entries of the same session are expected to be equal.");
     }
 
     /**
@@ -157,7 +157,7 @@ public class PriorityThreadPoolExecutorTest {
         int result = first.compareTo(last);
         
         // Verify results.
-        assertEquals("With a comparator, comparing entries of different sessions is expected to yield the comparator result.", predeterminedResult, result);
+        assertEquals(predeterminedResult, result, "With a comparator, comparing entries of different sessions is expected to yield the comparator result.");
     }
 
     /**
@@ -177,7 +177,7 @@ public class PriorityThreadPoolExecutorTest {
      * @exception Throwable If the test throw an exception
      */
     @Test
-    @Ignore("This test faiuls randomly")
+    @Disabled("This test fails randomly")
     public void testPrioritisation() throws Throwable {
         // Set up fixture.
         MockWorkFilter nextFilter = new MockWorkFilter();
@@ -216,8 +216,8 @@ public class PriorityThreadPoolExecutorTest {
         
         for (LastActivityTracker session : sessions) {
             if (session != preferredSession) {
-                assertTrue("All other sessions should have finished later than the preferred session (but at least one did not).", 
-                    session.lastActivity > preferredSession.lastActivity);
+                assertTrue(session.lastActivity > preferredSession.lastActivity,
+                    "All other sessions should have finished later than the preferred session (but at least one did not).");
             }
         }
     }
