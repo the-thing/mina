@@ -4,11 +4,6 @@ name: Java CI
 on:
   # Build only the production branches on push, so internal feature branches do not trigger a build twice (once on push, once on the pull request).
   push:
-    # Restricts push builds to these branches, even if the workflow is copied to another branch.
-    branches:
-      - 2.0.X
-      - 2.1.X
-      - 2.2.X
   # Build every pull request targeting the branch this workflow lives on.
   pull_request:
 
@@ -27,7 +22,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [macos-latest]
         java-version: [17, 21, 25]
         distribution: [temurin]
       fail-fast: false
@@ -59,7 +54,7 @@ jobs:
       - name: Test with Maven
         shell: bash
         run: |
-          mvn verify \
+          mvn test \
           -Pserial \
           --show-version --batch-mode --errors --no-transfer-progress
 

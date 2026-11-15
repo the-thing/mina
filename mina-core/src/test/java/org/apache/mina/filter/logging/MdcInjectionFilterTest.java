@@ -92,7 +92,7 @@ public class MdcInjectionFilterTest {
     @Before
     public void setUp() throws Exception {
         // comment out next line if you want to see normal logging
-        org.apache.log4j.Logger.getRootLogger().removeAllAppenders();
+        // org.apache.log4j.Logger.getRootLogger().removeAllAppenders();
         previousLevelRootLogger = org.apache.log4j.Logger.getRootLogger().getLevel();
         org.apache.log4j.Logger.getRootLogger().setLevel(Level.DEBUG);
         org.apache.log4j.Logger.getRootLogger().addAppender(appender);
@@ -294,8 +294,11 @@ public class MdcInjectionFilterTest {
         loggersToCheck.add(ProtocolCodecFilter.class.getName());
         loggersToCheck.add(LoggingFilter.class.getName());
 
+        LOGGER.error("ml_test, events={}", events);
+
         // verify that all logging events have correct MDC
         for (LoggingEvent event : events) {
+            LOGGER.error("ml_test, event={}, loggerName={}, message={}", event, event.getLoggerName(), event.getMessage());
 
             if (loggersToCheck.contains(event.getLoggerName())) {
                 Object remoteAddress = event.getMDC("remoteAddress");
